@@ -1,8 +1,6 @@
 package com.example.cnamfirsttest
 
 
-//import java.net.Socket
-
 import android.annotation.SuppressLint
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -60,16 +58,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             //variable temps pour sondage
             val tempsjour=0
-            var tempssondagejour = mutableIntStateOf(tempsjour)
+            val tempssondagejour = mutableIntStateOf(tempsjour)
             val tempsheur=0
-            var tempssondageheur = mutableIntStateOf(tempsheur)
+            val tempssondageheur = mutableIntStateOf(tempsheur)
             //val navController = findNavController(R.id.nav_host_fragment)
             val navController = rememberNavController()
 
 
-            var user = User(31,"Rick","test",null)
+            val user = User(31,"Rick","test",null)
 
-            var listsondages = mutableListOf<Sondage>()
+            val listsondages = mutableListOf<Sondage>()
             @Composable
             fun sondageItem(sondage:Sondage){
                 Surface(onClick = {navController.navigate("sondageJour/"+sondage.id.toString())} ) {
@@ -96,8 +94,7 @@ class MainActivity : ComponentActivity() {
             // Add the graph to the NavController with `createGraph()`.
             NavHost(navController = navController, startDestination = "Home" ) {
                 composable("Home"){Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally){
-                    //val context = LocalContext.current
-                    //var mSocket = IO.socket("http://84.235.235.229:3000/")
+
                     Listsondage(sondages = listsondages )
                     FilledTonalButton(
                         onClick = {
@@ -116,12 +113,12 @@ class MainActivity : ComponentActivity() {
                     FilledTonalButton(
                         onClick = {
                             try {
-                                mSocket.connect();
+                                mSocket.connect()
                                 Log.d("socket", "Connect")
                                 mSocket.emit("test emission de richard")
-                                //context.startActivity(Intent(context,Createsondage::class.java))
+
                             }
-                            catch( e:URISyntaxException){}
+                            catch(_:URISyntaxException){}
                         },
                         colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                     )
@@ -157,15 +154,15 @@ class MainActivity : ComponentActivity() {
                         Text(text = "Temps de sondage jour")
                         Row{
 
-                            Button(onClick = { tempssondagejour.value= tempssondagejour.value-1}) {
+                            Button(onClick = { tempssondagejour.intValue -= 1 }) {
                                 Text(
                                     "-"
                                 )
                             }
                             Text(
-                                text = tempssondagejour.value.toString()
+                                text = tempssondagejour.intValue.toString()
                             )
-                            Button(onClick = { tempssondagejour.value= tempssondagejour.value+1}) {
+                            Button(onClick = { tempssondagejour.intValue += 1 }) {
                                 Text(
                                     "+"
                                 )
@@ -174,15 +171,15 @@ class MainActivity : ComponentActivity() {
                         Text(text = "Temps de sondage horaire")
                         Row{
 
-                            Button(onClick = { tempssondageheur.value= tempssondageheur.value-1}) {
+                            Button(onClick = { tempssondageheur.intValue -= 1 }) {
                                 Text(
                                     "-"
                                 )
                             }
                             Text(
-                                text = tempssondageheur.value.toString()
+                                text = tempssondageheur.intValue.toString()
                             )
-                            Button(onClick = { tempssondageheur.value= tempssondageheur.value+1}) {
+                            Button(onClick = { tempssondageheur.intValue += 1 }) {
                                 Text(
                                     "+"
                                 )
@@ -194,8 +191,8 @@ class MainActivity : ComponentActivity() {
                                 val date = Date()
 
                                 listsondages.add(Sondage(text,
-                                    tempssondagejour.value,
-                                    tempssondageheur.value,
+                                    tempssondagejour.intValue,
+                                    tempssondageheur.intValue,
                                     listsondages.size+1,
                                     user.id,
                                     null,
@@ -226,10 +223,10 @@ class MainActivity : ComponentActivity() {
                     //val sensorRot: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
                     //val sensorAcc: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-                    var sensorEventListener = object : SensorEventListener {
+                    val sensorEventListener = object : SensorEventListener {
                         override fun onSensorChanged(event: SensorEvent) {
                             // Process sensor data
-                            if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
+                            if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
                                 accelerationX = event.values[0]
                                 rotation = -truncate(accelerationX)*10
                                 // Process accelerometer data
@@ -316,16 +313,21 @@ class MainActivity : ComponentActivity() {
 class Sondage(
     val nomCrea:String,
     var timeTosondageJour: Int,
-    var timeTosondageHour: Int, val id:Int,
+    var timeTosondageHour: Int,
+    val id:Int,
     val user:Int,
     var pict:Blob?,
     val dateCreation: Date
-){
-
-}
-class User(val id:Int, var pseudo:String, var password:String, var pict: Blob?){
-}
-class Vote(val id:Int,val user:Int, val day:String, val hour:String ){
-
-}
+)
+class User(
+    val id:Int,
+    var pseudo:String,
+    var password:String,
+    var pict: Blob?)
+class Vote(
+    val id:Int,
+    val user:Int,
+    val day:String,
+    val hour:String
+)
 

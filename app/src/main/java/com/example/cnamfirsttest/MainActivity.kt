@@ -35,6 +35,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
@@ -68,6 +70,7 @@ class MainActivity : ComponentActivity() {
             val user = User(31,"Rick","test",null)
 
             val listsondages = mutableListOf<Sondage>()
+            val listvotes = mutableListOf<Vote>()
             @Composable
             fun sondageItem(sondage:Sondage){
                 Surface(onClick = {navController.navigate("sondageJour/"+sondage.id.toString())} ) {
@@ -218,6 +221,10 @@ class MainActivity : ComponentActivity() {
 
                     var rotation by remember { mutableStateOf(0f) }
                     val offset = Offset(0f,00f)
+                    var dayvote by remember {
+                        mutableStateOf("")
+                    }
+                    var hourvote = 0
 
                     val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
                     //val sensorRot: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
@@ -230,6 +237,15 @@ class MainActivity : ComponentActivity() {
                                 accelerationX = event.values[0]
                                 rotation = -truncate(accelerationX)*10
                                 // Process accelerometer data
+                                when(rotation){
+                                    in -90f..-64f -> dayvote="lundi"
+                                    in -64f..-38f -> dayvote="mardi"
+                                    in -38f..-12f -> dayvote="mercredi"
+                                    in -12f..14f -> dayvote="jeudi"
+                                    in 14f..40f -> dayvote="vendredi"
+                                    in 40f..66f -> dayvote="samedi"
+                                    in 66f..91f -> dayvote="dimanche"
+                                }
                             }
                         }
                         override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
@@ -242,10 +258,6 @@ class MainActivity : ComponentActivity() {
                             it,
                             SensorManager.SENSOR_DELAY_UI/2)
                     }
-
-
-
-
                     Column (
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
@@ -254,24 +266,10 @@ class MainActivity : ComponentActivity() {
 
                         Text(text = "Vote n°$idVote, choix jour")
 
-                        Canvas(modifier = Modifier
-                            .size(250.dp)
-                            .drawBehind { }) {
-                            val roundedPolygon = RoundedPolygon(
-                                numVertices = 3,
-                                radius = size.minDimension / 8,
-                                centerX = size.width / 18,
-                                centerY = size.height /2
 
-                            )
-                            rotate(degrees = 90f){
-                                val roundedPolygonPath = roundedPolygon.toPath().asComposePath()
-                                drawPath(roundedPolygonPath,Color.LightGray)
-                            }
-                        }
                         Canvas(
                                 modifier = Modifier
-                                    .size(250.dp)
+                                    .size(300.dp)
                                     .drawBehind { }
                                 ) {
 
@@ -280,8 +278,8 @@ class MainActivity : ComponentActivity() {
                             val red = Color(255,0,0)
 
 
-                            drawArc(Color.Yellow,257f,27f, true,offset)
-                            rotate(degrees = rotation){
+
+                            translate(top=300f){
 
                                 drawArc(blue,180f,25f, true,offset )
                                 drawArc(green,206f,25f, true,offset)
@@ -290,9 +288,48 @@ class MainActivity : ComponentActivity() {
                                 drawArc(blue,284f,25f, true,offset)
                                 drawArc(green,310f,25f, true,offset)
                                 drawArc(red,336f,25f, true,offset)
+
+                                scale(1.2F,1.2f){
+                                    when(dayvote){
+                                        "lundi"->drawArc(blue,180f,25f, true,offset)
+                                        "mardi"->drawArc(green,206f,25f, true,offset)
+                                        "mercredi"->drawArc(red,232f,25f, true,offset)
+                                        "jeudi"->drawArc(green,258f,25f, true,offset)
+                                        "vendredi"->drawArc(blue,284f,25f, true,offset )
+                                        "samedi"->drawArc(green,310f,25f, true,offset)
+                                        "dimanche"->drawArc(red,336f,25f, true,offset )
+                                    }
+                                }
+
                             }
 
                         }
+                        FilledTonalButton(
+                            onClick = {
+                                val vote = Vote(listvotes.size+1,user.id,dayvote,hourvote.toString())
+                                listvotes.add(vote)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
+                        )
+                        {
+                            Text(
+                                "Voter",
+                                color = Color.White
+                            )
+                        }
+                        FilledTonalButton(
+                            onClick = {
+                                navController.navigate("Home")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
+                        )
+                        {
+                            Text(
+                                "Retour",
+                                color = Color.White
+                            )
+                        }
+
 
                     }
 
@@ -306,7 +343,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mSocket.disconnect();
+        mSocket.disconnect()
     }
 }
 

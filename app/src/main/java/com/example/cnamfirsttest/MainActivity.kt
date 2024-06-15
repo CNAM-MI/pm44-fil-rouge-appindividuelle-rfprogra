@@ -1,7 +1,9 @@
 package com.example.cnamfirsttest
 
+
+//import java.net.Socket
+
 import android.annotation.SuppressLint
-import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -41,61 +43,18 @@ import androidx.graphics.shapes.toPath
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import dev.icerock.moko.socket.Socket
-import dev.icerock.moko.socket.SocketEvent
-import dev.icerock.moko.socket.SocketOptions
+import io.socket.client.IO
+import java.net.URISyntaxException
 import java.sql.Blob
-import java.text.SimpleDateFormat
-//import java.net.Socket
+import java.util.Date
 import kotlin.math.truncate
 
-
+var mSocket = IO.socket("http://84.235.235.229:3000/")
 class MainActivity : ComponentActivity() {
 
     @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        val socket = Socket(
-            endpoint = "//84.235.235.229:3000/",
-            config = SocketOptions(
-                queryParams = mapOf("token" to "MySuperToken"),
-                transport = SocketOptions.Transport.WEBSOCKET
-            )
-        ) {
-            on(SocketEvent.Connect) {
-                println("connect")
-            }
-
-            on(SocketEvent.Connecting) {
-                println("connecting")
-            }
-
-            on(SocketEvent.Disconnect) {
-                println("disconnect")
-            }
-
-            on(SocketEvent.Error) {
-                println("error $it")
-            }
-
-            on(SocketEvent.Reconnect) {
-                println("reconnect")
-            }
-
-            on(SocketEvent.ReconnectAttempt) {
-                println("reconnect attempt $it")
-            }
-
-            on(SocketEvent.Ping) {
-                println("ping")
-            }
-
-            on(SocketEvent.Pong) {
-                println("pong")
-            }
-
-
-        }
 
         super.onCreate(savedInstanceState)
         setContent {
@@ -138,6 +97,7 @@ class MainActivity : ComponentActivity() {
             NavHost(navController = navController, startDestination = "Home" ) {
                 composable("Home"){Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally){
                     //val context = LocalContext.current
+                    //var mSocket = IO.socket("http://84.235.235.229:3000/")
                     Listsondage(sondages = listsondages )
                     FilledTonalButton(
                         onClick = {
@@ -155,10 +115,13 @@ class MainActivity : ComponentActivity() {
 
                     FilledTonalButton(
                         onClick = {
-                            socket.connect()
-                            println("test")
-                            Log.d("socket","Connect?")
-                            //context.startActivity(Intent(context,Createsondage::class.java))
+                            try {
+                                mSocket.connect();
+                                Log.d("socket", "Connect")
+                                mSocket.emit("test emission de richard")
+                                //context.startActivity(Intent(context,Createsondage::class.java))
+                            }
+                            catch( e:URISyntaxException){}
                         },
                         colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                     )
@@ -228,7 +191,7 @@ class MainActivity : ComponentActivity() {
                         FilledTonalButton(
                             onClick = {
 
-                                val date = java.util.Date()
+                                val date = Date()
 
                                 listsondages.add(Sondage(text,
                                     tempssondagejour.value,
@@ -259,7 +222,7 @@ class MainActivity : ComponentActivity() {
                     var rotation by remember { mutableStateOf(0f) }
                     val offset = Offset(0f,00f)
 
-                    val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+                    val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
                     //val sensorRot: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
                     //val sensorAcc: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
@@ -343,6 +306,11 @@ class MainActivity : ComponentActivity() {
         }
 
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mSocket.disconnect();
+    }
 }
 
 class Sondage(
@@ -351,7 +319,7 @@ class Sondage(
     var timeTosondageHour: Int, val id:Int,
     val user:Int,
     var pict:Blob?,
-    val dateCreation: java.util.Date
+    val dateCreation: Date
 ){
 
 }
@@ -360,3 +328,4 @@ class User(val id:Int, var pseudo:String, var password:String, var pict: Blob?){
 class Vote(val id:Int,val user:Int, val day:String, val hour:String ){
 
 }
+

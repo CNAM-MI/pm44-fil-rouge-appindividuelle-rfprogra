@@ -14,13 +14,7 @@
         android:theme="@style/Theme.CnamFirstTest"
         tools:targetApi="31"
         android:usesCleartextTraffic="true">
-        <activity
-            android:name=".Createsondage"
-            android:exported="false" />
-        <activity
-            android:name=".sondageHub"
-            android:exported="false"
-            android:theme="@style/Theme.CnamFirstTest" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

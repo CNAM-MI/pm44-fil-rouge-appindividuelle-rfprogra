@@ -3,11 +3,9 @@ package com.example.cnamfirsttest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.Sensor
-import android.hardware.Sensor.TYPE_ACCELEROMETER
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.nfc.Tag
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -17,7 +15,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,12 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
@@ -50,6 +44,8 @@ import androidx.navigation.compose.rememberNavController
 import dev.icerock.moko.socket.Socket
 import dev.icerock.moko.socket.SocketEvent
 import dev.icerock.moko.socket.SocketOptions
+import java.sql.Blob
+import java.text.SimpleDateFormat
 //import java.net.Socket
 import kotlin.math.truncate
 
@@ -103,38 +99,37 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
         setContent {
-            //variable temps pour vote
-            var tempsjour=0
-            var tempsvotejour = mutableIntStateOf(tempsjour)
-            var tempsheur=0
-            var tempsvoteheur = mutableIntStateOf(tempsheur)
+            //variable temps pour sondage
+            val tempsjour=0
+            var tempssondagejour = mutableIntStateOf(tempsjour)
+            val tempsheur=0
+            var tempssondageheur = mutableIntStateOf(tempsheur)
             //val navController = findNavController(R.id.nav_host_fragment)
             val navController = rememberNavController()
 
 
-            class Vote(val nomCrea:String,var timeToVoteJour: Int,var timeToVoteHour: Int, var id:Int){
+            var user = User(31,"Rick","test",null)
 
-            }
-            var listVotes = mutableListOf<Vote>()
+            var listsondages = mutableListOf<Sondage>()
             @Composable
-            fun VoteItem(vote:Vote){
-                Surface(onClick = {navController.navigate("VoteJour/"+vote.id.toString())} ) {
+            fun sondageItem(sondage:Sondage){
+                Surface(onClick = {navController.navigate("sondageJour/"+sondage.id.toString())} ) {
                     Column {
-                        Text(text = "Vote id "+vote.id+" créé par "+vote.nomCrea,
+                        Text(text = "sondage id "+sondage.id+" créé par "+sondage.nomCrea,
                             color=Color.Cyan)
 
                         Row {
-                            Text(text = "Temps jour :"+vote.timeToVoteJour.toString())
-                            Text(text = "Temps heure "+vote.timeToVoteHour.toString())
+                            Text(text = "Temps jour :"+sondage.timeTosondageJour.toString())
+                            Text(text = "Temps heure "+sondage.timeTosondageHour.toString())
                         }
                     }
                 }
             }
             @Composable
-            fun ListVote(votes:List<Vote>){
+            fun Listsondage(sondages:List<Sondage>){
                 Column {
-                    votes.forEach{Vote ->
-                        VoteItem(Vote)
+                    sondages.forEach{sondage ->
+                        sondageItem(sondage)
                     }
                 }
             }
@@ -143,17 +138,17 @@ class MainActivity : ComponentActivity() {
             NavHost(navController = navController, startDestination = "Home" ) {
                 composable("Home"){Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally){
                     //val context = LocalContext.current
-                    ListVote(votes = listVotes )
+                    Listsondage(sondages = listsondages )
                     FilledTonalButton(
                         onClick = {
-                            navController.navigate("CreateVote")
-                            //context.startActivity(Intent(context,CreateVote::class.java))
+                            navController.navigate("Createsondage")
+                            //context.startActivity(Intent(context,Createsondage::class.java))
                         },
                         colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                     )
                     {
                         Text(
-                            "Créer un vote",
+                            "Créer un sondage",
                             color = Color.White
                         )
                     }
@@ -163,7 +158,7 @@ class MainActivity : ComponentActivity() {
                             socket.connect()
                             println("test")
                             Log.d("socket","Connect?")
-                            //context.startActivity(Intent(context,CreateVote::class.java))
+                            //context.startActivity(Intent(context,Createsondage::class.java))
                         },
                         colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                     )
@@ -175,12 +170,12 @@ class MainActivity : ComponentActivity() {
                     }
 
                 }}
-                composable("CreateVote"){Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                composable("Createsondage"){Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         var text by remember { mutableStateOf("") }
                         FilledTonalButton(
                             onClick = {
                                 navController.navigate("Home")
-                                //context.startActivity(Intent(context,CreateVote::class.java))
+                                //context.startActivity(Intent(context,Createsondage::class.java))
                             },
                             colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                         ){
@@ -196,35 +191,35 @@ class MainActivity : ComponentActivity() {
                             onValueChange = { newtext -> text = newtext },
                             label = { Text(text = "Nom") }
                         )
-                        Text(text = "Temps de vote jour")
+                        Text(text = "Temps de sondage jour")
                         Row{
 
-                            Button(onClick = { tempsvotejour.value= tempsvotejour.value-1}) {
+                            Button(onClick = { tempssondagejour.value= tempssondagejour.value-1}) {
                                 Text(
                                     "-"
                                 )
                             }
                             Text(
-                                text = tempsvotejour.value.toString()
+                                text = tempssondagejour.value.toString()
                             )
-                            Button(onClick = { tempsvotejour.value= tempsvotejour.value+1}) {
+                            Button(onClick = { tempssondagejour.value= tempssondagejour.value+1}) {
                                 Text(
                                     "+"
                                 )
                             }
                         }
-                        Text(text = "Temps de vote horaire")
+                        Text(text = "Temps de sondage horaire")
                         Row{
 
-                            Button(onClick = { tempsvoteheur.value= tempsvoteheur.value-1}) {
+                            Button(onClick = { tempssondageheur.value= tempssondageheur.value-1}) {
                                 Text(
                                     "-"
                                 )
                             }
                             Text(
-                                text = tempsvoteheur.value.toString()
+                                text = tempssondageheur.value.toString()
                             )
-                            Button(onClick = { tempsvoteheur.value= tempsvoteheur.value+1}) {
+                            Button(onClick = { tempssondageheur.value= tempssondageheur.value+1}) {
                                 Text(
                                     "+"
                                 )
@@ -232,10 +227,20 @@ class MainActivity : ComponentActivity() {
                         }
                         FilledTonalButton(
                             onClick = {
-                                listVotes.add(Vote(text,tempsvotejour.value,tempsvoteheur.value,listVotes.size+1))
+
+                                val date = java.util.Date()
+
+                                listsondages.add(Sondage(text,
+                                    tempssondagejour.value,
+                                    tempssondageheur.value,
+                                    listsondages.size+1,
+                                    user.id,
+                                    null,
+                                    date
+                                ))
                                 navController.navigate("Home")
-                                //context.startActivity(Intent(context,CreateVote::class.java))
-                            },
+
+                                },
                             colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                         ){
                             Text(
@@ -246,13 +251,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                composable("VoteJour/{idVote}"){
+                composable("sondageJour/{idVote}"){
                     backStactEntry -> val idVote = backStactEntry.arguments?.getString("idVote")
 
                     var accelerationX by remember { mutableStateOf(0f) }
 
                     var rotation by remember { mutableStateOf(0f) }
-                    val offset:Offset= Offset(0f,00f)
+                    val offset = Offset(0f,00f)
 
                     val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
                     //val sensorRot: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
@@ -287,7 +292,7 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ){
 
-                        Text(text = "Vote n°"+idVote+", choix jour")
+                        Text(text = "Vote n°$idVote, choix jour")
 
                         Canvas(modifier = Modifier
                             .size(250.dp)
@@ -310,10 +315,10 @@ class MainActivity : ComponentActivity() {
                                     .drawBehind { }
                                 ) {
 
-                            var blue = Color(0,100,255)
-                            var green =Color(0,255,0)
-                            var red = Color(255,0,0)
-                            var black = Color(0,0,0)
+                            val blue = Color(0,100,255)
+                            val green =Color(0,255,0)
+                            val red = Color(255,0,0)
+
 
                             drawArc(Color.Yellow,257f,27f, true,offset)
                             rotate(degrees = rotation){
@@ -340,3 +345,18 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+class Sondage(
+    val nomCrea:String,
+    var timeTosondageJour: Int,
+    var timeTosondageHour: Int, val id:Int,
+    val user:Int,
+    var pict:Blob?,
+    val dateCreation: java.util.Date
+){
+
+}
+class User(val id:Int, var pseudo:String, var password:String, var pict: Blob?){
+}
+class Vote(val id:Int,val user:Int, val day:String, val hour:String ){
+
+}

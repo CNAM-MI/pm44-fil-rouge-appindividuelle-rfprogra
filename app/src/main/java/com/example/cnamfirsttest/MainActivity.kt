@@ -23,10 +23,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.socket.client.IO
+import kotlinx.coroutines.launch
 import java.net.URISyntaxException
 import java.sql.Blob
 import java.util.Date
@@ -73,6 +76,13 @@ class MainActivity : ComponentActivity() {
 
             val listsondages = mutableListOf<Sondage>()
             val listvotes = mutableListOf<Vote>()
+            val vote1 = Vote(1,3,"lundi","hourvote.toString()")
+            val vote2 = Vote(1,5,"lundi","hourvote.toString()")
+            val vote3 = Vote(1,9,"jeudi","hourvote.toString()")
+            listvotes.add(vote1)
+            listvotes.add(vote2)
+            listvotes.add(vote3)
+
             @Composable
             fun sondageItem(sondage:Sondage){
                 Surface(onClick = {navController.navigate("sondageJour/"+sondage.id.toString())} ) {
@@ -218,16 +228,55 @@ class MainActivity : ComponentActivity() {
 
                 composable("sondageJour/{idVote}"){
                     backStactEntry -> val idVote = backStactEntry.arguments?.getString("idVote")
-
+                    val composableScope = rememberCoroutineScope()
                     var accelerationX by remember { mutableStateOf(0f) }
 
                     var rotation by remember { mutableStateOf(0f) }
                     val offset = Offset(0f,00f)
-                    var dayvote by remember {
-                        mutableStateOf("")
-                    }
+                    var dayvote by remember { mutableStateOf("") }
                     var hourvote = 0
                     val textMeasurer = rememberTextMeasurer()
+                    var lundi by remember { mutableStateOf(0) }
+                    var mardi by remember { mutableStateOf(0) }
+                    var mercredi by remember { mutableStateOf(0) }
+                    var jeudi by remember { mutableStateOf(0) }
+                    var vendredi by remember { mutableStateOf(0) }
+                    var samedi by remember { mutableStateOf(0) }
+                    var dimanche by remember { mutableStateOf(0) }
+                    fun checkVotes(){
+                         lundi =0
+                         mardi =0
+                        mercredi =0
+                         jeudi =0
+                        vendredi =0
+                        samedi =0
+                        dimanche =0
+                        listvotes.forEach{
+                            vote ->
+                            println("userid :"+ vote.user)
+                            if(vote.id.toString()==idVote){
+                                when(vote.day){
+                                    "lundi"->lundi+=1
+                                    "mardi"->mardi+=1
+                                    "mercredi"->mercredi+=1
+                                    "jeudi"->jeudi+=1
+                                    "vendredi"->vendredi+=1
+                                    "samedi"->samedi+=1
+                                    "dimanche"->dimanche+=1
+                                }
+                            }
+
+                        }
+                    }
+                    LaunchedEffect(composableScope){
+                        composableScope.launch{
+                            checkVotes()
+                        }
+                    }
+
+
+
+
 
                     val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
                     //val sensorRot: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
@@ -349,8 +398,21 @@ class MainActivity : ComponentActivity() {
                         }
                         FilledTonalButton(
                             onClick = {
-                                val vote = Vote(listvotes.size+1,user.id,dayvote,hourvote.toString())
-                                listvotes.add(vote)
+                                when(dayvote){
+                                    "lundi"->dayvote="lundi"
+                                    "mardi"->dayvote="mardi"
+                                    "mercredi"->dayvote="mercredi"
+                                    "jeudi"->dayvote="jeudi"
+                                    "vendredi"->dayvote="vendredi"
+                                    "samedi"->dayvote="samedi"
+                                    "dimanche"->dayvote="dimanche"
+                                }
+                                var vote = idVote?.toInt()
+                                    ?.let { Vote(it,user.id,dayvote,hourvote.toString()) }
+                                if (vote != null) {
+                                    listvotes.add(vote)
+                                }
+                                checkVotes()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                         )
@@ -372,6 +434,8 @@ class MainActivity : ComponentActivity() {
                                 color = Color.White
                             )
                         }
+                        Text("Resultats vote :")
+                        Text("lundi:$lundi mardi:$mardi mercredi:$mercredi jeudi:$jeudi vendredi:$vendredi samedi:$samedi dimanche:$dimanche")
 
 
                     }
@@ -410,4 +474,3 @@ class Vote(
     val day:String,
     val hour:String
 )
-

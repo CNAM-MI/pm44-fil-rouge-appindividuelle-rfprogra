@@ -8,7 +8,7 @@ Kotlin profite d'être un langage natif android pour exploiter son hardware le p
 Le jeune age fait que des évolutions marquantes peuvent modifier radicalement la façon de développer avec le langage, l'apprenant doit donc être à jour de ces changements.
 Par exemple, le développement de Jetpack Compose a marqué un changement majeur dans la maniére de d'écrire du Kotlin.
 
-<h1>Specificité Mobile</h1>
+<h1>Spécificité Mobile</h1>
 Utilisation du capteur accéleromettre du téléphone pour déterminer l'inclinaison de celui-ci lors du processus de vote.
 
 <h1>Bilan</h1>

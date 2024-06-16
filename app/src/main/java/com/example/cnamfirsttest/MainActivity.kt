@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
@@ -225,6 +227,7 @@ class MainActivity : ComponentActivity() {
                         mutableStateOf("")
                     }
                     var hourvote = 0
+                    val textMeasurer = rememberTextMeasurer()
 
                     val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
                     //val sensorRot: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
@@ -300,6 +303,46 @@ class MainActivity : ComponentActivity() {
                                         "dimanche"->drawArc(red,336f,25f, true,offset )
                                     }
                                 }
+                                translate(top=320f,left=60f) {
+                                    drawText(textMeasurer, "lundi")
+                                }
+                                translate(top=280f,left=-100f) {
+                                    rotate(25f){
+                                        drawText(textMeasurer, "mardi")
+                                    }
+
+                                }
+                                translate(top=250f,left=-230f) {
+                                    rotate(55f){
+                                        drawText(textMeasurer, "mercredi")
+                                    }
+
+                                }
+                                translate(top=50f,left=350f) {
+                                    rotate(0f){
+                                        drawText(textMeasurer, "jeudi")
+                                    }
+
+                                }
+                                translate(top=-270f,left=600f) {
+                                    rotate(-55f){
+                                        drawText(textMeasurer, "vendredi")
+                                    }
+
+                                }
+                                translate(top=5f,left=700f) {
+                                    rotate(-30f){
+                                        drawText(textMeasurer, "samedi")
+                                    }
+
+                                }
+                                translate(top=320f,left=600f) {
+                                    rotate(0f){
+                                        drawText(textMeasurer, "dimanche")
+                                    }
+
+                                }
+
 
                             }
 

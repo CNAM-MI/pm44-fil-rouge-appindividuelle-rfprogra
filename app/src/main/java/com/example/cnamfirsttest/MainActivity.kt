@@ -6,10 +6,14 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,18 +43,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import androidx.graphics.shapes.RoundedPolygon
-import androidx.graphics.shapes.toPath
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import io.socket.client.IO
 import kotlinx.coroutines.launch
 import java.net.URISyntaxException
@@ -63,7 +65,13 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
+        try {
+            mSocket.connect()
+            Log.d("socket", "Connect")
+            mSocket.emit("test emission de richard")
 
+        }
+        catch(_:URISyntaxException){}
 
         super.onCreate(savedInstanceState)
         setContent {
@@ -91,17 +99,23 @@ class MainActivity : ComponentActivity() {
             @Composable
             fun sondageItem(sondage:Sondage){
                 Surface(onClick = {navController.navigate("sondageJour/"+sondage.id.toString())} ) {
-                    Column (modifier=Modifier
+                    Column (modifier= Modifier
                         .padding(2.dp)
-                        .border(width = 1.dp,
+                        .border(
+                            width = 1.dp,
                             color = Color.Blue,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .padding(2.dp)
                         .background(
-                            color=Color.White
+                            color = Color.White
                         )
                     ){
+                        AsyncImage(
+                            model=sondage.pict,
+                            contentDescription=null,
+                            modifier=Modifier.size(150.dp)
+                        )
                         Text(text = "sondage id "+sondage.id+" créé par "+sondage.nomCrea,
                             color=Color.Black)
 
@@ -140,29 +154,19 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    FilledTonalButton(
-                        onClick = {
-                            try {
-                                mSocket.connect()
-                                Log.d("socket", "Connect")
-                                mSocket.emit("test emission de richard")
 
-                            }
-                            catch(_:URISyntaxException){}
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
-                    )
-                    {
-                        Text(
-                            "Connection au serveur",
-                            color = Color.White
-                        )
-                    }
 
                 }}
                 composable("Createsondage"){Column (modifier = Modifier.fillMaxSize(),verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         var text by remember { mutableStateOf("") }
                         var errorText by remember { mutableStateOf("")}
+                        var uri by remember {mutableStateOf<Uri?>(null)}
+                        val singlePhotoPicker = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.PickVisualMedia(),
+                            onResult={
+                                uri=it
+                            }
+                        )
                         FilledTonalButton(
                             onClick = {
                                 navController.navigate("Home")
@@ -215,8 +219,20 @@ class MainActivity : ComponentActivity() {
                                 Text(
                                     "+"
                                 )
+
                             }
                         }
+                        FilledTonalButton(onClick = {
+                            singlePhotoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        }) {
+                            Text(text = "Select Image")
+
+                        }
+                    AsyncImage(
+                                model=uri,
+                    contentDescription=null,
+                    modifier=Modifier.size(150.dp)
+                    )
                         FilledTonalButton(
                             onClick = {
                                 if(text!=""&&tempssondagejour.intValue>0&&tempssondageheur.intValue>0){
@@ -227,7 +243,7 @@ class MainActivity : ComponentActivity() {
                                         tempssondageheur.intValue,
                                         listsondages.size+1,
                                         user.id,
-                                        null,
+                                        uri,
                                         date
                                     ))
                                     navController.navigate("Home")
@@ -258,7 +274,7 @@ class MainActivity : ComponentActivity() {
                     var rotation by remember { mutableStateOf(0f) }
                     val offset = Offset(0f,00f)
                     var dayvote by remember { mutableStateOf("") }
-                    var hourvote = 0
+                    val hourvote = 0
                     val textMeasurer = rememberTextMeasurer()
                     var lundi by remember { mutableStateOf(0) }
                     var mardi by remember { mutableStateOf(0) }
@@ -433,7 +449,7 @@ class MainActivity : ComponentActivity() {
                                         "samedi"->dayvote="samedi"
                                         "dimanche"->dayvote="dimanche"
                                     }
-                                    var vote = idVoteInt?.let { Vote(it,user.id,dayvote,hourvote.toString()) }
+                                    val vote = idVoteInt?.let { Vote(it,user.id,dayvote,hourvote.toString()) }
                                     if (vote != null) {
                                         listvotes.add(vote)
                                     }
@@ -487,7 +503,7 @@ class Sondage(
     var timeTosondageHour: Int,
     val id:Int,
     val user:Int,
-    var pict:Blob?,
+    var pict: Uri?,
     val dateCreation: Date
 )
 class User(

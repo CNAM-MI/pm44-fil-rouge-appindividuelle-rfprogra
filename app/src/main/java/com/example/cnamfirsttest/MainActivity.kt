@@ -11,11 +11,15 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -68,7 +72,7 @@ class MainActivity : ComponentActivity() {
             val tempssondagejour = mutableIntStateOf(tempsjour)
             val tempsheur=0
             val tempssondageheur = mutableIntStateOf(tempsheur)
-            //val navController = findNavController(R.id.nav_host_fragment)
+
             val navController = rememberNavController()
 
 
@@ -76,19 +80,30 @@ class MainActivity : ComponentActivity() {
 
             val listsondages = mutableListOf<Sondage>()
             val listvotes = mutableListOf<Vote>()
+            /*
             val vote1 = Vote(1,3,"lundi","hourvote.toString()")
             val vote2 = Vote(1,5,"lundi","hourvote.toString()")
             val vote3 = Vote(1,9,"jeudi","hourvote.toString()")
             listvotes.add(vote1)
             listvotes.add(vote2)
             listvotes.add(vote3)
-
+            */
             @Composable
             fun sondageItem(sondage:Sondage){
                 Surface(onClick = {navController.navigate("sondageJour/"+sondage.id.toString())} ) {
-                    Column {
+                    Column (modifier=Modifier
+                        .padding(2.dp)
+                        .border(width = 1.dp,
+                            color = Color.Blue,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(2.dp)
+                        .background(
+                            color=Color.White
+                        )
+                    ){
                         Text(text = "sondage id "+sondage.id+" créé par "+sondage.nomCrea,
-                            color=Color.Cyan)
+                            color=Color.Black)
 
                         Row {
                             Text(text = "Temps jour :"+sondage.timeTosondageJour.toString())
@@ -108,7 +123,7 @@ class MainActivity : ComponentActivity() {
 
             // Add the graph to the NavController with `createGraph()`.
             NavHost(navController = navController, startDestination = "Home" ) {
-                composable("Home"){Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally){
+                composable("Home"){Column (modifier = Modifier.fillMaxSize(),verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally){
 
                     Listsondage(sondages = listsondages )
                     FilledTonalButton(
@@ -145,12 +160,12 @@ class MainActivity : ComponentActivity() {
                     }
 
                 }}
-                composable("Createsondage"){Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                composable("Createsondage"){Column (modifier = Modifier.fillMaxSize(),verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         var text by remember { mutableStateOf("") }
+                        var errorText by remember { mutableStateOf("")}
                         FilledTonalButton(
                             onClick = {
                                 navController.navigate("Home")
-                                //context.startActivity(Intent(context,Createsondage::class.java))
                             },
                             colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
                         ){
@@ -159,14 +174,14 @@ class MainActivity : ComponentActivity() {
                                 color = Color.White
                             )
                         }
-                        Text(text = "Nom")
+                        Text(text = "Nom",color=Color.White)
 
                         OutlinedTextField(
                             value = text,
                             onValueChange = { newtext -> text = newtext },
-                            label = { Text(text = "Nom") }
+                            label = { Text(text = "Nom",color=Color.White) }
                         )
-                        Text(text = "Temps de sondage jour")
+                        Text(text = "Temps de sondage jour",color=Color.White)
                         Row{
 
                             Button(onClick = { tempssondagejour.intValue -= 1 }) {
@@ -175,7 +190,8 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             Text(
-                                text = tempssondagejour.intValue.toString()
+                                text = tempssondagejour.intValue.toString(),
+                                color=Color.White
                             )
                             Button(onClick = { tempssondagejour.intValue += 1 }) {
                                 Text(
@@ -183,7 +199,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        Text(text = "Temps de sondage horaire")
+                        Text(text = "Temps de sondage horaire", color=Color.White)
                         Row{
 
                             Button(onClick = { tempssondageheur.intValue -= 1 }) {
@@ -192,7 +208,8 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             Text(
-                                text = tempssondageheur.intValue.toString()
+                                text = tempssondageheur.intValue.toString(),
+                                color=Color.White
                             )
                             Button(onClick = { tempssondageheur.intValue += 1 }) {
                                 Text(
@@ -202,18 +219,23 @@ class MainActivity : ComponentActivity() {
                         }
                         FilledTonalButton(
                             onClick = {
+                                if(text!=""&&tempssondagejour.intValue>0&&tempssondageheur.intValue>0){
+                                    val date = Date()
 
-                                val date = Date()
+                                    listsondages.add(Sondage(text,
+                                        tempssondagejour.intValue,
+                                        tempssondageheur.intValue,
+                                        listsondages.size+1,
+                                        user.id,
+                                        null,
+                                        date
+                                    ))
+                                    navController.navigate("Home")
+                                }
+                                else{
+                                    errorText="Veuillez remplir corectement les champs"
+                                }
 
-                                listsondages.add(Sondage(text,
-                                    tempssondagejour.intValue,
-                                    tempssondageheur.intValue,
-                                    listsondages.size+1,
-                                    user.id,
-                                    null,
-                                    date
-                                ))
-                                navController.navigate("Home")
 
                                 },
                             colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
@@ -223,6 +245,7 @@ class MainActivity : ComponentActivity() {
                                 color = Color.White
                             )
                         }
+                        Text(errorText,color=Color.Red)
                     }
                 }
 
@@ -282,13 +305,8 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-
-
-
-
                     val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-                    //val sensorRot: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-                    //val sensorAcc: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
 
                     val sensorEventListener = object : SensorEventListener {
                         override fun onSensorChanged(event: SensorEvent) {
@@ -324,8 +342,7 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ){
 
-                        Text(text = "Vote n°$idVote, choix jour")
-
+                        Text(text = "Vote n°$idVote, choix jour", color=Color.White)
 
                         Canvas(
                                 modifier = Modifier
@@ -444,8 +461,8 @@ class MainActivity : ComponentActivity() {
                                 color = Color.White
                             )
                         }
-                        Text("Resultats vote :")
-                        Text("lundi:$lundi mardi:$mardi mercredi:$mercredi jeudi:$jeudi vendredi:$vendredi samedi:$samedi dimanche:$dimanche")
+                        Text("Resultats vote :", color=Color.White)
+                        Text("lundi:$lundi mardi:$mardi mercredi:$mercredi jeudi:$jeudi vendredi:$vendredi samedi:$samedi dimanche:$dimanche", color=Color.White)
 
 
                     }

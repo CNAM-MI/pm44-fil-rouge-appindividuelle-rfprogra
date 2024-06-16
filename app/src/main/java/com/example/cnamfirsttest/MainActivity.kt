@@ -228,6 +228,7 @@ class MainActivity : ComponentActivity() {
 
                 composable("sondageJour/{idVote}"){
                     backStactEntry -> val idVote = backStactEntry.arguments?.getString("idVote")
+                    val idVoteInt = idVote?.toInt()
                     val composableScope = rememberCoroutineScope()
                     var accelerationX by remember { mutableStateOf(0f) }
 
@@ -243,6 +244,9 @@ class MainActivity : ComponentActivity() {
                     var vendredi by remember { mutableStateOf(0) }
                     var samedi by remember { mutableStateOf(0) }
                     var dimanche by remember { mutableStateOf(0) }
+                    var alreadyVoted by remember { mutableStateOf(false) }
+                    var colorBtnVote by remember { mutableStateOf(Color.Blue) }
+
                     fun checkVotes(){
                          lundi =0
                          mardi =0
@@ -264,6 +268,10 @@ class MainActivity : ComponentActivity() {
                                     "samedi"->samedi+=1
                                     "dimanche"->dimanche+=1
                                 }
+                            }
+                            if(vote.user==user.id&&vote.id==idVoteInt){
+                                alreadyVoted=true
+                                colorBtnVote=Color.Gray
                             }
 
                         }
@@ -398,23 +406,25 @@ class MainActivity : ComponentActivity() {
                         }
                         FilledTonalButton(
                             onClick = {
-                                when(dayvote){
-                                    "lundi"->dayvote="lundi"
-                                    "mardi"->dayvote="mardi"
-                                    "mercredi"->dayvote="mercredi"
-                                    "jeudi"->dayvote="jeudi"
-                                    "vendredi"->dayvote="vendredi"
-                                    "samedi"->dayvote="samedi"
-                                    "dimanche"->dayvote="dimanche"
+                                if(alreadyVoted==false){
+                                    when(dayvote){
+                                        "lundi"->dayvote="lundi"
+                                        "mardi"->dayvote="mardi"
+                                        "mercredi"->dayvote="mercredi"
+                                        "jeudi"->dayvote="jeudi"
+                                        "vendredi"->dayvote="vendredi"
+                                        "samedi"->dayvote="samedi"
+                                        "dimanche"->dayvote="dimanche"
+                                    }
+                                    var vote = idVoteInt?.let { Vote(it,user.id,dayvote,hourvote.toString()) }
+                                    if (vote != null) {
+                                        listvotes.add(vote)
+                                    }
+                                    checkVotes()
                                 }
-                                var vote = idVote?.toInt()
-                                    ?.let { Vote(it,user.id,dayvote,hourvote.toString()) }
-                                if (vote != null) {
-                                    listvotes.add(vote)
-                                }
-                                checkVotes()
+
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor  = Color.Blue)
+                            colors = ButtonDefaults.buttonColors(containerColor  = colorBtnVote)
                         )
                         {
                             Text(
